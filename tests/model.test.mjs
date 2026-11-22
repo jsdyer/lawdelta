@@ -1,21 +1,7 @@
-import test from 'node:test';
-import assert from 'node:assert/strict';
-import { cleanLines } from '../web/model.mjs';
-test('trims, removes blanks and preserves first-seen order', () => {
-  assert.deepEqual(cleanLines('  Halifax\nLangley\nHalifax\n\nVancouver  '), {
-    text: 'Halifax\nLangley\nVancouver', count: 3, removed: 1,
-  });
-});
-test('supports Windows and old Mac line endings', () => {
-  assert.equal(cleanLines('a\r\nb\ra').text, 'a\nb');
-});
-test('empty text and whitespace produce an empty result', () => {
-  assert.deepEqual(cleanLines(' \n\t'), { text: '', count: 0, removed: 0 });
-});
-test('preserves case and Unicode', () => {
-  assert.equal(cleanLines('Québec\nquébec\n東京\nQuébec').text, 'Québec\nquébec\n東京');
-});
-test('treats markup as ordinary text', () => {
-  assert.equal(cleanLines('<script>alert(1)</script>\n<script>alert(1)</script>').text, '<script>alert(1)</script>');
-});
-test('rejects non-text input', () => { assert.throws(() => cleanLines(null), TypeError); });
+import test from 'node:test';import assert from 'node:assert/strict';import {compareUnits,filterUnits,lineDiff,annotationState,csv} from '../web/model.mjs';
+const unit=(key,text)=>({key,label:key,heading:'Heading',text});
+test('first capture is baseline, never invented additions',()=>{const result=compareUnits(null,{units:[unit('section:1','one')]});assert.equal(result[0].state,'baseline');assert.equal(result[0].before,null);});
+test('matches stable numbered units and distinguishes additions removals and edits',()=>{const a={units:[unit('section:1','same'),unit('section:2','old'),unit('section:3','removed')]},b={units:[unit('section:1','same'),unit('section:2','new'),unit('section:4','added')]};const out=compareUnits(a,b);assert.deepEqual(out.map(x=>x.state),['unchanged','changed','added','removed']);assert.equal(filterUnits(out,'new','changed').length,1);});
+test('line diff reconstructs both originals including insertion deletion and hostile strings',()=>{for(const [a,b] of [['same\nold\nend','same\nnew\nend'],['','added'],['<script>\nhello','hello\nworld']]){const diff=lineDiff(a,b);assert.equal(diff.filter(x=>x.kind!=='insert').map(x=>x.text).join('\n'),a);assert.equal(diff.filter(x=>x.kind!=='delete').map(x=>x.text).join('\n'),b);}});
+test('future effective metadata is not presented as already effective',()=>{assert.equal(annotationState('2027-08-01','2026-11-22T00:00:00Z'),'Future date in source metadata');});
+test('CSV preserves text and blocks spreadsheet formula evaluation',()=>{assert.equal(csv([['+SUM(A1)','a"b']]),'"\'+SUM(A1)","a""b"\r\n');});

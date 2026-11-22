@@ -7,6 +7,7 @@ import re
 import shutil
 import tempfile
 from urllib.parse import urlsplit
+from archive import manifest
 
 ROOT = Path(__file__).resolve().parents[1]
 SLUG = re.compile(r"[a-z0-9]+(?:-[a-z0-9]+)*")
@@ -42,6 +43,9 @@ def metadata(root=ROOT):
 
 def build(root=ROOT):
     tool = metadata(root)
+    history = manifest(root)
+    if not history["captures"]:
+        raise ValueError("No validated data captures")
     output = root / "dist"
     if output.is_symlink():
         raise ValueError("dist must not be a symlink")
@@ -51,6 +55,7 @@ def build(root=ROOT):
     with tempfile.TemporaryDirectory(prefix="coolcode-tool-") as temporary:
         stage = Path(temporary) / "site"
         shutil.copytree(web, stage)
+        shutil.copytree(root / "data", stage / "data")
         index = stage / "index.html"
         page = index.read_text(encoding="utf-8")
         for token, key in {"TITLE": "title", "DESCRIPTION": "description", "TOOL_ID": "id", "SOURCE_URL": "source"}.items():

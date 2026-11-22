@@ -1,37 +1,9 @@
-import { cleanLines } from './model.mjs';
-const input = document.querySelector('#input');
-const output = document.querySelector('#output');
-const status = document.querySelector('#status');
-const copy = document.querySelector('#copy');
-function update() {
-  const result = cleanLines(input.value);
-  output.value = result.text;
-  status.textContent = `${result.count} unique ${result.count === 1 ? 'line' : 'lines'}; ${result.removed} ${result.removed === 1 ? 'duplicate' : 'duplicates'} removed.`;
-  copy.disabled = result.count === 0;
-}
-input.addEventListener('input', update);
-document.querySelector('#sample').addEventListener('click', () => {
-  input.value = '  Halifax\nLangley\nHalifax\n\nVancouver  ';
-  update();
-});
-document.querySelector('#clear').addEventListener('click', () => {
-  input.value = '';
-  update();
-  input.focus();
-});
-if (navigator.clipboard && window.isSecureContext) {
-  copy.hidden = false;
-  copy.disabled = true;
-  copy.addEventListener('click', async () => {
-    try {
-      await navigator.clipboard.writeText(output.value);
-      status.textContent = 'Result copied.';
-    } catch {
-      output.focus();
-      output.select();
-      status.textContent = 'Copy was unavailable. The result is selected so you can copy it manually.';
-    }
-  });
-}
-// Namespace future preference storage as coolcode:<tool-id>:<key>.
-// Do not persist pasted text or uploads by default.
+import {compareUnits,filterUnits,lineDiff,annotationState,unitCSV} from './model.mjs';
+import {$,el,link,formatDate,getJSON,capturePath,download,stat,evidence,fail} from './shared.mjs';
+let manifest,after,before=null,selected='foippa',visible=[],current=null;let token=0;const cache=new Map();
+async function getCapture(path){if(!cache.has(path))cache.set(path,await getJSON(capturePath(path)));return cache.get(path);}
+function render(){if(!after)return;$('#edition').textContent='Captured '+formatDate(after.captured_at);const all=after.documents.flatMap(d=>compareUnits(before?.documents.find(x=>x.id===d.id),d));const changed=all.filter(u=>['changed','added','removed'].includes(u.state)).length;$('#stats').replaceChildren(stat(after.documents.length,'selected laws'),stat(all.length,'sections & schedules'),stat(before?changed:'Baseline',before?'observed text changes':'no prior version assumed'),stat(manifest.captures.length,'dated captures retained'));$('#baseline').textContent=before?`Comparing text captured ${formatDate(before.captured_at)} → ${formatDate(after.captured_at)}. These observation dates do not establish when a law took effect.`:'First capture baseline. Browse the current captured text; observed changes will appear when a later capture differs. No earlier law has been invented.';$('#documents').replaceChildren();for(const doc of after.documents){const b=el('button');b.type='button';b.setAttribute('aria-pressed',String(doc.id===selected));b.append(el('strong',doc.title),el('small',`${doc.kind} · ${doc.units.length} sections & schedules`));b.addEventListener('click',()=>{selected=doc.id;render();});$('#documents').append(b);}current=after.documents.find(d=>d.id===selected)??after.documents[0];const old=before?.documents.find(d=>d.id===current.id);const units=compareUnits(old,current);visible=filterUnits(units,$('#search').value,$('#change-filter').value);$('#doc-head').replaceChildren(el('p','British Columbia / '+current.kind,'eyebrow'),el('h2',current.title),el('p',current.source_metadata.amsincluded??'Source amendment date not supplied in this XML document.','small muted'));$('#unit-count').textContent=`${visible.length} of ${units.length} units shown · ${before?'compared captures':'baseline text'}`;$('#units').replaceChildren();for(const u of visible){const details=el('details',null,'unit'),summary=el('summary');summary.append(document.createTextNode(u.label),el('span',u.heading),el('span',u.state,'badge '+(u.state==='changed'?'amber':u.state==='added'?'green':u.state==='removed'?'red':'')));details.append(summary);const body=el('div');if(u.state==='changed'){const diff=lineDiff(u.before.text,u.after.text),grid=el('div',null,'diff-grid');for(const side of ['before','after']){const pane=el('div',null,'diff-pane');pane.append(el('h4',side==='before'?'Earlier capture · removed lines':'Later capture · added lines'));for(const line of diff)if(side==='before'?line.kind!=='insert':line.kind!=='delete')pane.append(el('div',line.text,'diff-line '+line.kind));grid.append(pane);}body.append(grid);}else body.append(el('div',(u.after??u.before).text,'law-text'));if(u.state==='baseline')body.append(el('p','Baseline text only. There is no earlier captured version to compare.','notice'));details.append(body);$('#units').append(details);}if(!visible.length)$('#units').append(el('p','No units match. Try all sections or clear the search.','empty'));renderEvidence(current);}
+function renderEvidence(doc){const box=$('#evidence');box.replaceChildren();const details=el('details');details.append(el('summary','Source evidence & effective-date annotations'));const body=el('div');const source=after.sources.find(s=>s.sha256===doc.raw_sha256);body.append(evidence([['Official document',link('Read on BC Laws',doc.official_url)],['Official XML',link('CiviX document endpoint',doc.source_url)],['Captured XML',source?link('Exact archived source','./data/'+source.archive_path):'Not supplied'],['Retrieved',formatDate(doc.retrieved_at)],['Last-Modified',source?.last_modified??'Not supplied by source'],['Raw SHA-256',doc.raw_sha256],['Normalization','Section numbers and schedule labels identify units. Formatting-only whitespace is ignored.'],['Royal assent',doc.source_metadata.assentedto??'Not supplied'],['Source effective',doc.source_metadata.effective??'Not supplied; not inferred from capture date'],['Licence',link('King’s Printer Licence – British Columbia',doc.licence_url)]]));body.append(el('hr',null,'divider'),el('h3','Document amendment metadata'));if(doc.effective_annotations.length){const list=el('ul',null,'annotation-list');for(const a of doc.effective_annotations){const li=el('li',`${a.effective} · ${a.regulation??'No regulation number'} · ${annotationState(a.effective,after.captured_at)}`);if(a.added)li.append(document.createTextNode(` · source added ${a.added}`));list.append(li);}body.append(list,el('p','These dates are copied from document-level amendment metadata. They are not attributed to individual section changes. Future dates are not evidence that a change is already effective.','notice'));}else body.append(el('p','This XML document provides no regulation amendment effective-date list. No dates have been inferred.','small muted'));details.append(body);box.append(details);}
+async function load(){const ticket=++token;const ai=Number($('#after').value),bv=$('#before').value;let bi=bv===''?-1:Number(bv);if(bi>=ai){bi=-1;$('#before').value='';}for(const option of $('#before').options)if(option.value!=='')option.disabled=Number(option.value)>=ai;const [a,b]=await Promise.all([getCapture(manifest.captures[ai].path),bi>=0?getCapture(manifest.captures[bi].path):null]);if(ticket!==token)return;after=a;before=b;render();}
+$('#search').addEventListener('input',render);$('#change-filter').addEventListener('change',render);$('#before').addEventListener('change',()=>load().catch(fail));$('#after').addEventListener('change',()=>load().catch(fail));$('#export').addEventListener('click',()=>current&&download(unitCSV(visible,current.title,before?.captured_at,after.captured_at),'lawdelta-sections.csv'));
+try{manifest=await getJSON('./data/manifest.json');manifest.captures.forEach((c,i)=>{for(const id of ['before','after']){const o=el('option',formatDate(c.captured_at));o.value=String(i);$('#'+id).append(o);}});$('#after').value=String(manifest.captures.length-1);$('#before').value=manifest.captures.length>1?String(manifest.captures.length-2):'';await load();}catch(error){fail(error);}

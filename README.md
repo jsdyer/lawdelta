@@ -1,116 +1,60 @@
-# CoolCode browser tool template
+# Law Delta
 
-A starting point for independent tools at `coolcode.ca/<repo>/`: a working local-text
-example, responsive UI, Python standard-library build, Node tests, PR checks and Pages
-publication. No npm install is needed.
-
-## Using the example
+A static reading room for dated captures of four British Columbia privacy laws. It compares section and schedule text across captures from the official BC Laws CiviX XML API. Runs at `https://coolcode.ca/lawdelta/`; all browser filtering and comparison stays local.
 
 <!-- coolcode:guide -->
-The first occurrence of each trimmed line keeps its place. Compare the output with the original text before copying the result.
+Choose one of the two privacy Acts or their regulations, then search a printed section number or a word such as “consent”. The first capture is a baseline with no invented earlier version. Later captures can show added, removed and changed sections side by side. Capture dates are observation dates, while effective-date annotations come separately from the official XML. Read the linked BC Laws source before relying on a change; this is not legal advice.
 <!-- /coolcode:guide -->
 
-For a real tool, replace this paragraph with one or two plain-text sentences
-about an example, a limit or how to interpret the results. Keep the source,
-coverage, refresh behaviour and a worked example in this README as appropriate.
-When updating a tool, revise any details its behaviour has changed and keep the
-homepage's shorter data-source sentence in `tool.json` accurate.
-The hub imports the marked note into the catalogue README.
+## Exact watchlist
 
-## One-time template setup
+| Document | CiviX document ID | Source XML |
+| --- | --- | --- |
+| Freedom of Information and Protection of Privacy Act | `96165_00_multi` | [Complete XML](https://www.bclaws.gov.bc.ca/civix/document/id/complete/statreg/96165_00_multi/xml) |
+| Personal Information Protection Act | `03063_01` | [Complete XML](https://www.bclaws.gov.bc.ca/civix/document/id/complete/statreg/03063_01/xml) |
+| Freedom of Information and Protection of Privacy Regulation | `155_2012` | [Complete XML](https://www.bclaws.gov.bc.ca/civix/document/id/complete/statreg/155_2012/xml) |
+| Personal Information Protection Act Regulations | `473_2003` | [Complete XML](https://www.bclaws.gov.bc.ca/civix/document/id/complete/statreg/473_2003/xml) |
 
-Enable **Settings → General → Template repository** here. This repository does not
-need Pages enabled: its workflow builds/tests but intentionally skips deployment.
-New copies also skip deployment until `scripts/init.py` sets the tool ID to match
-their repository name. This lets you create the repo before configuring Pages.
+The initial real capture has **207 sections and schedules**. This is a complete-text watchlist of these four documents, not coverage of all BC law. The full FOIPPA document uses the API's documented `_multi` identifier; its unsuffixed `96165_00/xml` resource is an HTML table of contents and is rejected by the parser.
 
-## Start a new tool
+## Collection permission and source policy
 
-1. Select **Use this template → Create a new repository**, choose owner `jsdyer`,
-   a unique lowercase name such as `my-tool`, and public visibility.
-2. Clone the new repository. Use Python 3.12+ and Node 24+.
-3. Set the identity, using a slug that matches the repository name:
+[Official API overview](https://www.bclaws.gov.bc.ca/civix/template/complete/api/index.html) explicitly offers REST/XML retrieval for third-party applications under the [King's Printer Licence](https://www.bclaws.gov.bc.ca/standards/Licence.html). [Document API documentation](https://www.bclaws.gov.bc.ca/civix/template/complete/api/API_document.html) specifies `/xml` and full multi-document access.
 
-```sh
-python3 scripts/init.py my-tool --title "My Tool" --description "Describe what this tool does."
-```
+The site's `robots.txt` observed on 2026-11-22 disallows generic crawlers (`User-agent: *; Disallow: /`) while allowing named search engines. This application uses the expressly offered, documented REST API for four fixed resources; it never crawls HTML, follows discovered links, impersonates search engines, rotates IPs or bypasses blocks. The collector spaces requests by two seconds and fails closed on denied responses. No API key is needed. Review changes to provider terms before extending this fixed allowlist.
 
-Review the category, tags and icon in `tool.json`. `access: "browser"` tells the main
-catalogue that the tool works immediately without installation. `--owner` supports a different
-GitHub owner, but only projects owned by `jsdyer` inherit the CoolCode domain.
+## Dates and comparison model
 
-4. Replace the example in `web/` and its tests. Update the privacy explanation,
-   source attribution and README to describe the real tool.
-5. Test and preview:
+`captured_at` is our observation time. Per-source `retrieved_at`, HTTP Last-Modified/ETag when supplied, exact XML hash and original source URL are preserved. A missing source date is shown as missing.
+
+Printed section numbers identify sections; schedule titles identify whole schedules. Generated XML IDs are evidence only and do not determine matching. Inline text is retained, whitespace normalized and block boundaries preserved. Section heading or text changes are visible; formatting-only whitespace is ignored. Schedules, including tables, are compared as entire units. The raw XML retains source comments and notices. Textual normalization is a reading aid and can omit visual layout, so consult the source for forms or complex tables.
+
+Initial captures produce `baseline`, never additions. Later captures distinguish additions, removals, text changes and unchanged units. The browser lets readers choose any two retained captures in chronological order, search both versions, view changed lines and export section CSV. Observation intervals are not legal commencement dates.
+
+Regulation `amend/@effective`, `regnum`, `added` and `bullId` fields are copied verbatim into a separate document-level annotation list. They are not assigned to section changes. The current Personal Information Protection Act Regulations XML includes a future `2027-08-01` annotation; it is explicitly labelled as future relative to the capture. Royal assent, deposition and original effective-date fields are kept separately. No commencement date is inferred where XML does not supply one. This is not a historical point-in-time reconstruction or legal advice.
+
+## Reproducible data and deployment
+
+- Schedule: **08:27 UTC Mondays**, `27 8 * * 1`, in `.github/workflows/pages.yml`.
+- `python3 scripts/collect.py` fetches four XML resources, rejects HTML/DTD/entity documents, validates expected titles and nonempty unique numbered units, and saves only after all four parse successfully.
+- Exact sources live under `data/raw/<sha256>.xml`; dated, immutable normalized captures are in `data/history/`. `data/manifest.json` verifies all raw and normalized hashes on every build. New captures never overwrite old captures.
+- `data/index.json` is a small hub summary of coverage, unit count, capture timestamp, baseline/change status and latest path.
+- Normal builds are offline. A scheduled/manual refresh must pass Node/Python/browser checks before its data is committed and the same build is deployed. If a source or validation fails, the prior deployment remains available.
 
 ```sh
 node --test tests/*.test.mjs
 python3 -m unittest discover -s tests -v
 python3 scripts/build.py
-python3 -m http.server 8000 --directory dist
 ```
 
-Open `http://localhost:8000/`. The example trims lines, skips blanks and removes exact
-duplicates, preserving first-seen order and capitalization. It processes the text in tab memory. Update that explanation if your app behaves differently.
+CI performs Playwright checks at a Pages project subpath, including real baseline text, four-document navigation, search, change filters, annotations, CSV, safe literal input, desktop/mobile layout and screenshots. App/runtime dependencies: Python standard library and browser JavaScript only. Playwright is test-only. Do not commit `dist/` or add a `CNAME`.
 
-CI also tests the browser flow and mobile layout at a project subpath. Replace the
-sample assertions in `tests/browser_smoke.py` when implementing your own UI. To run
-that check locally (optional for ordinary preview):
+## Privacy and related tools
 
-```sh
-python3 -m venv .venv
-. .venv/bin/activate
-python3 -m pip install -r tests/browser-requirements.txt
-python3 -m playwright install --with-deps chromium
-python3 tests/browser_smoke.py
-```
+Filters and CSV export run in tab memory. No pasted legal text is uploaded; the browser reads only static data files. A shared CoolCode counter records aggregate opens without search strings. [ATIP Decisions Explorer](https://coolcode.ca/atipdecisions/) provides a related path into access-to-information decisions.
 
-Playwright is a test-only dependency; the app and its static build do not use it.
+## Required attribution
 
-## Publish and register
+These materials contain information that has been derived from information originally made available by the Province of British Columbia at: http://www.bclaws.gov.bc.ca and this information is being used in accordance with the King's Printer Licence – British Columbia available at: https://www.bclaws.gov.bc.ca/standards/Licence.html. They have not, however, been produced in affiliation with, or with the endorsement of, the Province of British Columbia and THESE MATERIALS ARE NOT AN OFFICIAL VERSION.
 
-When the actual tool is ready, in the **new tool repository** set **Settings → Pages → Build and deployment →
-Source → GitHub Actions**. Push to `main`, or manually run **Browser tool · Check and
-publish** after enabling Pages. If the initial deployment ran before Pages was enabled,
-enable it and rerun. PRs only check/build and provide a downloadable preview artifact.
-
-Keep `{{VISIT_COUNTER}}` in the page head and `{{ISSUE_LINK}}` in the footer when replacing the starter UI. The build enables these for initialized CoolCode repositories. The shared counter records aggregate opens on coolcode.ca by public tool ID. Toolbox inputs and URL parameters are excluded. The issue link opens a reporting form with the tool already selected.
-
-Keep app-owned asset paths and module imports relative. Check `https://coolcode.ca/my-tool/`.
-Do not add a CNAME or set `coolcode.ca` as this project's custom domain; the account
-site supplies it. Only successful `main` builds deploy.
-
-After verifying the app, copy the reviewed object from `tool.json` into `data/tools.json`
-in [the main site](https://github.com/jsdyer/jsdyer.github.io). Each tool still builds
-independently. Update the hub record when listing metadata changes; the hub is the
-authority for discovery. Ordinary app updates touch only this repository.
-
-The main site separates **Use in your browser** from **Install yourself**. An app
-that asks for a file is still a browser tool. Standalone Linux packages should start
-in their own repositories with their own build/release workflow, rather than copying
-this browser-only scaffold. Their hub record uses `access: "install"`, links to an
-installation guide, and includes `requirements`.
-
-## Files
-
-| Path | Purpose |
-| --- | --- |
-| `tool.json` | Page metadata and a ready-to-copy catalogue record |
-| `web/` | HTML, responsive CSS, DOM interactions and separate model logic |
-| `scripts/build.py` | Escape metadata and build `web/` into `dist/` |
-| `scripts/init.py` | Set a new project's identity |
-| `tests/` | Application and builder tests |
-| `.github/workflows/pages.yml` | Check PRs and publish successful main builds |
-| `AGENTS.md` | Instructions for future coding work |
-
-Namespace optional storage as `coolcode:<tool-id>:<key>`; CoolCode paths share a
-browser origin. Don't save pasted text/uploads by default. Document external APIs
-and send only the information needed for the selected action. Never embed secrets.
-
-Scheduled refresh is opt-in. Validate source data before deploying, display its date,
-and preserve the last good deployment on failure. Public-repository schedules can
-stop after 60 days without repository activity.
-
-Templates don't propagate future edits automatically. Adopt fixes explicitly and
-consider a versioned reusable workflow once several tools confirm the shared process.
-Choose and add the intended software license before distributing a new project.
+Software: MIT. Legislative data: King's Printer Licence – British Columbia (v1.1), not the Open Government Licence. The mandatory attribution also appears prominently in the app. No provincial logo or endorsement is claimed.

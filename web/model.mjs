@@ -1,7 +1,6 @@
-// Keep transformations separate from the DOM so they can be tested directly.
-export function cleanLines(text) {
-  if (typeof text !== 'string') throw new TypeError('Expected text');
-  const lines = text.split(/\r\n|\r|\n/).map(line => line.trim()).filter(Boolean);
-  const unique = [...new Set(lines)];
-  return { text: unique.join('\n'), count: unique.length, removed: lines.length - unique.length };
-}
+export function compareUnits(before,after){const old=new Map((before?.units??[]).map(u=>[u.key,u]));const next=new Map(after.units.map(u=>[u.key,u]));return [...new Set([...next.keys(),...old.keys()])].map(key=>{const a=old.get(key),b=next.get(key);return {...(b??a),before:a??null,after:b??null,state:!before?'baseline':!a?'added':!b?'removed':a.text!==b.text?'changed':'unchanged'};});}
+export function filterUnits(units,query='',state='all'){const q=query.toLocaleLowerCase().trim();return units.filter(u=>(state==='all'||u.state===state)&&[u.label,u.heading,u.before?.text??'',u.after?.text??''].join(' ').toLocaleLowerCase().includes(q));}
+export function lineDiff(before,after){const a=before.split('\n'),b=after.split('\n');if(before===after)return a.map(text=>({kind:'same',text}));if(a.length*b.length>120000)return [...a.map(text=>({kind:'delete',text})),...b.map(text=>({kind:'insert',text}))];const dp=Array.from({length:a.length+1},()=>new Uint16Array(b.length+1));for(let i=a.length-1;i>=0;i--)for(let j=b.length-1;j>=0;j--)dp[i][j]=a[i]===b[j]?1+dp[i+1][j+1]:Math.max(dp[i+1][j],dp[i][j+1]);let i=0,j=0,out=[];while(i<a.length||j<b.length){if(i<a.length&&j<b.length&&a[i]===b[j]){out.push({kind:'same',text:a[i++]});j++;}else if(j<b.length&&(i===a.length||dp[i][j+1]>=dp[i+1][j]))out.push({kind:'insert',text:b[j++]});else out.push({kind:'delete',text:a[i++]});}return out;}
+export function annotationState(value,capture){return value>capture.slice(0,10)?'Future date in source metadata':'Date in source metadata';}
+export function csv(rows){const cell=x=>{const s=String(x??'');return '"'+(/^[=+@\-\t\r]/.test(s)?"'"+s:s).replaceAll('"','""')+'"';};return rows.map(row=>row.map(cell).join(',')).join('\r\n')+'\r\n';}
+export function unitCSV(units,title,before,after){return csv([['Document','Unit','Heading','Observed state','Earlier capture UTC','Later capture UTC','Earlier text','Later text'],...units.map(u=>[title,u.label,u.heading,u.state,before??'',after,u.before?.text??'',u.after?.text??''])]);}
