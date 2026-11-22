@@ -2,19 +2,19 @@
   "id": "lawdelta",
   "title": "Law Delta",
   "description": "Track section-level changes across dated captures of selected British Columbia laws.",
-  "category": "research",
+  "category": "explorers",
   "tags": [
     "british-columbia",
     "legislation",
     "changes"
   ],
-  "icon": "book-open",
+  "icon": "gavel",
   "url": "/lawdelta/",
   "source": "https://github.com/jsdyer/lawdelta",
   "hosting": "project",
   "access": "browser",
   "data_info": {
     "mode": "snapshot",
-    "detail": "Dated BC Laws CiviX XML captures of four privacy statutes and regulations, under the King\u2019s Printer Licence."
+    "detail": "Dated BC Laws CiviX XML captures of four privacy statutes and regulations, under the King’s Printer Licence."
   }
 }

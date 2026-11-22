@@ -51,7 +51,7 @@ CI performs Playwright checks at a Pages project subpath, including real baselin
 
 ## Privacy and related tools
 
-Filters and CSV export run in tab memory. No pasted legal text is uploaded; the browser reads only static data files. A shared CoolCode counter records aggregate opens without search strings. [ATIP Decisions Explorer](https://coolcode.ca/atipdecisions/) provides a related path into access-to-information decisions.
+Filters and CSV export run in tab memory. No pasted legal text is uploaded; the browser reads only static data files. A shared CoolCode counter records aggregate opens without search strings. [ATIP Records Explorer](https://coolcode.ca/atip/) provides a related path into access-to-information records.
 
 ## Required attribution
 
