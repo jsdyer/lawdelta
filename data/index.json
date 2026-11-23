@@ -1,7 +1,7 @@
 {
-  "baseline": true,
-  "capture_count": 1,
-  "captured_at": "2026-11-22T14:56:41Z",
+  "baseline": false,
+  "capture_count": 2,
+  "captured_at": "2026-11-23T20:26:00Z",
   "change_count": 0,
   "coverage": "Two BC privacy Acts and their regulations; section and schedule text only, captured snapshots rather than complete legislative history.",
   "document_count": 4,
@@ -9,34 +9,34 @@
     {
       "id": "foippa",
       "kind": "Act",
-      "state": "baseline",
+      "state": "unchanged",
       "title": "Freedom of Information and Protection of Privacy Act",
       "units": 119
     },
     {
       "id": "pipa",
       "kind": "Act",
-      "state": "baseline",
+      "state": "unchanged",
       "title": "Personal Information Protection Act",
       "units": 62
     },
     {
       "id": "foippa-reg",
       "kind": "Regulation",
-      "state": "baseline",
+      "state": "unchanged",
       "title": "Freedom of Information and Protection of Privacy Regulation",
       "units": 20
     },
     {
       "id": "pipa-reg",
       "kind": "Regulation",
-      "state": "baseline",
+      "state": "unchanged",
       "title": "Personal Information Protection Act Regulations",
       "units": 6
     }
   ],
   "history_url": "./manifest.json",
-  "latest": "history/2026-11-22T145641Z.json",
+  "latest": "history/2026-11-23T202600Z.json",
   "licence_url": "https://www.bclaws.gov.bc.ca/standards/Licence.html",
   "record_count": 207,
   "schema_version": 1,

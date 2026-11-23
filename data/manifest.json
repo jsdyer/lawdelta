@@ -4,6 +4,11 @@
       "captured_at": "2026-11-22T14:56:41Z",
       "path": "history/2026-11-22T145641Z.json",
       "sha256": "f72718eae2f6f4b614cee480fdc309a977b33564cf418873fd78db20497348f6"
+    },
+    {
+      "captured_at": "2026-11-23T20:26:00Z",
+      "path": "history/2026-11-23T202600Z.json",
+      "sha256": "2e609a7c97b4f2f8b434439517e800dbbf1fed76540cb17ab64cca5f9d66af39"
     }
   ],
   "schema_version": 1
