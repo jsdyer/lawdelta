@@ -15,6 +15,7 @@
   "access": "browser",
   "data_info": {
     "mode": "snapshot",
-    "detail": "Weekly BC Laws title catalogue plus immutable CiviX XML captures of four privacy laws. Broader title search does not imply full-text history for all laws."
+    "detail": "Weekly BC Laws title catalogue plus immutable CiviX XML captures of four privacy laws. Broader title search does not imply full-text history for all laws.",
+    "cadence": "Weekly"
   }
 }
