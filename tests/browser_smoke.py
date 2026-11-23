@@ -25,6 +25,12 @@ def main():
                 page.goto(f'http://127.0.0.1:{server.server_port}/{ROOT.name}/')
                 page.locator('#edition').filter(has_text='Captured').wait_for()
                 assert page.locator('#documents button').count()==4
+                page.locator('#library-status').filter(has_text='catalogue records').wait_for()
+                page.locator('#library-query').fill('consent')
+                assert page.locator('#watch-search-results article').count()>0
+                page.locator('#library-query').fill('tenancy')
+                assert page.locator('#catalogue-results a').count()>0
+                page.locator('#library-query').fill('')
                 page.locator('#before').select_option('')
                 page.locator('#baseline').filter(has_text='baseline').wait_for()
                 assert page.locator('#units details').count()>20

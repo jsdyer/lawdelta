@@ -1,7 +1,7 @@
 {
   "id": "lawdelta",
   "title": "Law Delta",
-  "description": "Track section-level changes across dated captures of selected British Columbia laws.",
+  "description": "Search BC legislation titles and compare section-level changes across captured privacy laws.",
   "category": "explorers",
   "tags": [
     "british-columbia",
@@ -15,6 +15,6 @@
   "access": "browser",
   "data_info": {
     "mode": "snapshot",
-    "detail": "Dated BC Laws CiviX XML captures of four privacy statutes and regulations, under the King’s Printer Licence."
+    "detail": "Weekly BC Laws title catalogue plus immutable CiviX XML captures of four privacy laws. Broader title search does not imply full-text history for all laws."
   }
 }

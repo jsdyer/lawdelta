@@ -19,7 +19,7 @@ concurrency:
 jobs:
   build:
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    timeout-minutes: 60
     permissions:
       contents: write
     outputs:
@@ -36,7 +36,9 @@ jobs:
           node-version: '24'
       - name: Refresh immutable source captures
         if: github.event_name == 'schedule' || inputs.refresh == true
-        run: python3 scripts/collect.py
+        run: |
+          python3 scripts/collect.py
+          python3 scripts/collect_catalogue.py
       - name: Test the application
         run: node --test tests/*.test.mjs
       - name: Test the builder

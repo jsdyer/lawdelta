@@ -3,7 +3,7 @@
 A static reading room for dated captures of four British Columbia privacy laws. It compares section and schedule text across captures from the official BC Laws CiviX XML API. Runs at `https://coolcode.ca/lawdelta/`; all browser filtering and comparison stays local.
 
 <!-- coolcode:guide -->
-Choose one of the two privacy Acts or their regulations, then search a printed section number or a word such as “consent”. The first capture is a baseline with no invented earlier version. Later captures can show added, removed and changed sections side by side. Capture dates are observation dates, while effective-date annotations come separately from the official XML. Read the linked BC Laws source before relying on a change; this is not legal advice.
+Search the wider BC legislation title catalogue and full text across the four privacy laws in the selected capture. Historical versions and legislative change tables are labelled separately. Open a section to inspect its recorded text and compare captures. Observation dates are distinct from effective dates; catalogue title matches do not add change history for other laws.
 <!-- /coolcode:guide -->
 
 ## Exact watchlist
@@ -21,7 +21,7 @@ The initial real capture has **207 sections and schedules**. This is a complete-
 
 [Official API overview](https://www.bclaws.gov.bc.ca/civix/template/complete/api/index.html) explicitly offers REST/XML retrieval for third-party applications under the [King's Printer Licence](https://www.bclaws.gov.bc.ca/standards/Licence.html). [Document API documentation](https://www.bclaws.gov.bc.ca/civix/template/complete/api/API_document.html) specifies `/xml` and full multi-document access.
 
-The site's `robots.txt` observed on 2026-11-22 disallows generic crawlers (`User-agent: *; Disallow: /`) while allowing named search engines. This application uses the expressly offered, documented REST API for four fixed resources; it never crawls HTML, follows discovered links, impersonates search engines, rotates IPs or bypasses blocks. The collector spaces requests by two seconds and fails closed on denied responses. No API key is needed. Review changes to provider terms before extending this fixed allowlist.
+The site's `robots.txt` observed on 2026-11-22 disallows generic crawlers (`User-agent: *; Disallow: /`) while allowing named search engines. This application uses the expressly offered, documented REST API for four fixed full-text resources and a paginated document-title catalogue; it never crawls HTML, follows discovered links, impersonates search engines, rotates IPs or bypasses blocks. The full-text collector spaces requests by two seconds. The title collector starts at most one request per second with at most four in flight, and caches completed pages for the day to resume transient failures. Both stop on denied responses. No API key is needed.
 
 ## Dates and comparison model
 
@@ -58,3 +58,10 @@ Filters and CSV export run in tab memory. No pasted legal text is uploaded; the 
 These materials contain information that has been derived from information originally made available by the Province of British Columbia at: http://www.bclaws.gov.bc.ca and this information is being used in accordance with the King's Printer Licence – British Columbia available at: https://www.bclaws.gov.bc.ca/standards/Licence.html. They have not, however, been produced in affiliation with, or with the endorsement of, the Province of British Columbia and THESE MATERIALS ARE NOT AN OFFICIAL VERSION.
 
 Software: MIT. Legislative data: King's Printer Licence – British Columbia (v1.1), not the Open Government Licence. The mandatory attribution also appears prominently in the app. No provincial logo or endorsement is claimed.
+
+
+## Added browser workflow
+
+Search the wider BC legislation title catalogue and full text across the four privacy laws in the selected capture. Historical versions and legislative change tables are labelled separately. Open a section to inspect its recorded text and compare captures. Observation dates are distinct from effective dates; catalogue title matches do not add change history for other laws.
+
+The weekly workflow refreshes the four immutable full-text captures and a separate static title catalogue through the documented CiviX search API. Catalogue metadata is replaced atomically only after complete pagination and validation. Identical documents indexed under different source parents are merged with all parent IDs retained; repeated or conflicting records fail validation. Source hit counts and merged alias counts are preserved. Browser searches never call BC Laws. The catalogue is not a full historical text archive.
