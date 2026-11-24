@@ -65,3 +65,11 @@ Software: MIT. Legislative data: King's Printer Licence – British Columbia (v1
 Search the wider BC legislation title catalogue and full text across the four privacy laws in the selected capture. Historical versions and legislative change tables are labelled separately. Open a section to inspect its recorded text and compare captures. Observation dates are distinct from effective dates; catalogue title matches do not add change history for other laws.
 
 The weekly workflow refreshes the four immutable full-text captures and a separate static title catalogue through the documented CiviX search API. Catalogue metadata is replaced atomically only after complete pagination and validation. Identical documents indexed under different source parents are merged with all parent IDs retained; repeated or conflicting records fail validation. Source hit counts and merged alias counts are preserved. Browser searches never call BC Laws. The catalogue is not a full historical text archive.
+
+<!-- schedule-reliability -->
+## Schedule reliability
+
+Public GitHub repositories can have scheduled workflows disabled after 60 days of inactivity. A separate weekly [schedule guard](.github/workflows/schedule-guard.yml) calls GitHub's enable-workflow API for an explicit list of refresh workflows and itself. It can restore workflows disabled for inactivity, preserves manually disabled workflows, and runs independently of collection failures.
+
+This is an interim mitigation, not a scheduling guarantee: GitHub does not document active-workflow renewal as a permanent exemption, and scheduled runs can be delayed or dropped. A scheduler on our own Linux server is the planned independent trigger. The guard does not collect data, create dummy commits, or change source/check timestamps; successful collection and published data freshness still need monitoring.
+<!-- /schedule-reliability -->
